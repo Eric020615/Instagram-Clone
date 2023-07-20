@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:whatsapp_clone/resources/auth_methods.dart';
 import 'package:whatsapp_clone/utils/colors.dart';
+import 'package:whatsapp_clone/utils/utils.dart';
 import 'package:whatsapp_clone/widgets/text_field_input.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,6 +21,20 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
     _email_controller.dispose();
     _password_controller.dispose();
+  }
+
+  void loginUser() async {
+    String res = await AuthMethods().loginUser(
+      email: _email_controller.text, 
+      password: _password_controller.text
+    );
+    if(res == "success"){
+
+    }
+    else{
+      // show error
+      showSnackBar(res, context);
+    }
   }
 
   @override
@@ -71,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 // button
                 InkWell(
+                  onTap: loginUser,
                   child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
