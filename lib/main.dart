@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:whatsapp_clone/providers/user_provider.dart';
 import 'package:whatsapp_clone/responsive/mobile_screen_layout.dart';
 import 'package:whatsapp_clone/responsive/responsive_layout_screen.dart';
 import 'package:whatsapp_clone/responsive/web_screen_layout.dart';
@@ -17,12 +20,12 @@ void main() async {
     await Firebase.initializeApp(
         // put options since in web, FirebaseOptions cannot be null while create default app
         options: const FirebaseOptions(
-            apiKey: "AIzaSyA2MMK6ps8ObG_ofamcyHP-DWkBEXlLJQ8",
-            appId: "1:1000994854969:web:e2e4c32e32bf70eea0d5e8",
-            messagingSenderId: "1000994854969",
-            projectId: "instagram-clone-8327c",
-            storageBucket: "instagram-clone-8327c.appspot.com",
-        ));
+      apiKey: "AIzaSyA2MMK6ps8ObG_ofamcyHP-DWkBEXlLJQ8",
+      appId: "1:1000994854969:web:e2e4c32e32bf70eea0d5e8",
+      messagingSenderId: "1000994854969",
+      projectId: "instagram-clone-8327c",
+      storageBucket: "instagram-clone-8327c.appspot.com",
+    ));
   } else {
     // initialise firebase in the mobile application
     await Firebase.initializeApp();
@@ -36,20 +39,49 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Instagram Clone',
-      // use the dark theme in flutter
-      theme: ThemeData.dark().copyWith(
-        // set the background to pre-set dark color
-        scaffoldBackgroundColor: mobileBackgroundColor,
-      ),
-      // home: const ResponsiveLayout(
-      //   mobileScreenLayout: MobileScreenLayout(),
-      //   webScreenLayout: WebScreenLayout(),
-      // ),
-      home: const SignUpScreen(),
-    );
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(
+            create: (_) => UserProvider()
+          ),
+          ],
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Instagram Clone',
+          // use the dark theme in flutter
+          theme: ThemeData.dark().copyWith(
+            // set the background to pre-set dark color
+            scaffoldBackgroundColor: mobileBackgroundColor,
+          ),
+          // home: const ResponsiveLayout(
+          //   mobileScreenLayout: MobileScreenLayout(),
+          //   webScreenLayout: WebScreenLayout(),
+          // ),
+          home: StreamBuilder(
+            // State management to check whether user log in
+            // if there is the change in authentification like log in and log out
+            stream: FirebaseAuth.instance.authStateChanges(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.active) {
+                if (snapshot.hasData) {
+                  return const ResponsiveLayout(
+                      webScreenLayout: WebScreenLayout(),
+                      mobileScreenLayout: MobileScreenLayout());
+                } else if (snapshot.hasError) {
+                  return const LoginScreen();
+                }
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    backgroundColor: primaryColor,
+                  ),
+                );
+              }
+              return const LoginScreen();
+            },
+          ),
+        ));
   }
 }
 
